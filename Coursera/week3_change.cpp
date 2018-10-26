@@ -1,0 +1,17 @@
+#include <iostream>
+
+int get_change(int m) {
+  // write your code here
+  int n;
+  n += m / 10;
+  m -= n * 10;
+  n += m / 5;
+  n += m % 5;
+  return n;
+}
+
+int main() {
+  int m;
+  std::cin >> m;
+  std::cout << get_change(m) << '\n';
+}
