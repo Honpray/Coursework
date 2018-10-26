@@ -1,4 +1,4 @@
-ASCII-style rougelike game character moving mockup for Database project.
+ASCII-style rougelike game character moving mockup for database course project.
 
 **Built with**
 
