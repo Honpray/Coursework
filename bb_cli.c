@@ -3,8 +3,8 @@
 #define CLI_DEBUG
 
 int main(int argc, char** argv) {
-	int sockfd;
-	char *input, *sevr_addr;
+	int sockfd, sent_bytes;
+	char *input, *sevr_addr, buf[BUFFER_SIZE];
 	struct sockaddr_in uc_addr, mc_addr;
 	struct ip_mreq mreq;
 
@@ -19,37 +19,40 @@ int main(int argc, char** argv) {
 #endif
 	
 	memset(&uc_addr, 0, sizeof uc_addr);
-	memset(&mc_addr, 0, sizeof mc_addr);
+	/*memset(&mc_addr, 0, sizeof mc_addr);*/
 	
 	uc_addr.sin_family = AF_INET;
 	uc_addr.sin_port = htons(SEVR_PORT);
 	inet_pton(AF_INET, sevr_addr, &uc_addr.sin_addr);
 
-	mc_addr.sin_family = AF_INET;
-	mc_addr.sin_port = htons(SEVR_PORT);
-	mc_addr.sin_addr.s_addr = INADDR_ANY;
+    /*mc_addr.sin_family = AF_INET;*/
+	/*mc_addr.sin_port = htons(SEVR_PORT);*/
+	/*mc_addr.sin_addr.s_addr = INADDR_ANY;*/
 	
-	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) != 0) {
+	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
 		perror("socket");
 		return 1;
 	}
-	
 
 	// if for multicast, call bind()
 
 	while (1) {
 		input = readline("> ");
-		printf("%s\n", input);
 
 		// Parse input as different command
 		// Use libevent for Asyc IO here
 
 		// unicast sendto()
 		
-		sendto(sockfd, input, strlen(input) + 1, 0, (struct sockaddr*)&uc_addr, sizeof uc_addr);
-
+		if ((sent_bytes = sendto(sockfd, input, strlen(input) + 1, 0, (SA *)&uc_addr, sizeof uc_addr)) == -1) {
+			perror("sendto");
+			return 1;
+		}
+		printf("%d\n", sent_bytes);
+		
 		// multicast recvfrom()
-		/*if (bind(sockfd, (struct sockaddr*)&mc_addr, sizeof mc_addr) != 0) {*/
+		
+		/*if (bind(sockfd, (SA *)&mc_addr, sizeof mc_addr) != 0) {*/
 			/*perror("bind");*/
 			/*return 1;*/
 		/*}*/
@@ -60,9 +63,6 @@ int main(int argc, char** argv) {
 			/*perror("setsockopt");*/
 			/*return 1;*/
 		/*}*/
-
-
-
 
 	}
 	

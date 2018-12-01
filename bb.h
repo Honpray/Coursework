@@ -27,6 +27,9 @@
 
 #include "rtt.h"
 
+#define BUFFER_SIZE 1024
 #define SEVR_PORT 9091
 #define SEVR_PORT_STR "9091"
 #define MC_GROUP "224.0.0.1"
+
+#define SA 	struct sockaddr
