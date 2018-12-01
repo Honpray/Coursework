@@ -10,6 +10,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <signal.h>
@@ -20,5 +21,12 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <event2/event.h>
+#include <event2/buffer.h>
+#include <event2/bufferevent.h>
+
+#include "rtt.h"
+
 #define SEVR_PORT 9091
 #define SEVR_PORT_STR "9091"
+#define MC_GROUP "224.0.0.1"
