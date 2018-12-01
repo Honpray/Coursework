@@ -3,7 +3,7 @@
 #define CLI_DEBUG
 
 int main(int argc, char** argv) {
-	int sockfd, sent_bytes;
+	int sockfd, sent_bytes, optval;
 	char *input, *sevr_addr, buf[BUFFER_SIZE];
 	struct sockaddr_in uc_addr, mc_addr;
 	struct ip_mreq mreq;
@@ -52,6 +52,9 @@ int main(int argc, char** argv) {
 		
 		// multicast recvfrom()
 		
+		/*optval = 1;*/
+		/*setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval , sizeof(int));*/
+
 		/*if (bind(sockfd, (SA *)&mc_addr, sizeof mc_addr) != 0) {*/
 			/*perror("bind");*/
 			/*return 1;*/
