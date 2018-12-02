@@ -2,20 +2,23 @@
 
 #define CLI_DEBUG
 
-void do_read(evutil_socket_t fd, short events, void *arg);
-// multicast & unicast recvfrom callback function
+void do_uread(evutil_socket_t fd, short events, void *arg);
+//unicast recvfrom callback function
+
+void do_mread(evutil_socket_t fd, short events, void *arg);
+// multicast recvfrom callback function
 
 void do_write(evutil_socket_t fd, short events, void *arg);
 // unicast sendto callback funtion
 
 int main(int argc, char **argv) {
 	int optval;
-	evutil_socket_t sockfd[2]; // [0] for receiving, [1] for sending 
+	evutil_socket_t sockfd[2]; // [0] for mread, [1] for sending, [2] for uread 
 	char *sevr_addr;
-	struct sockaddr_in uc_addr, mc_addr;
+	struct sockaddr_in uc_addr, mc_addr, any_addr;
 	struct ip_mreq mreq;
 	struct event_base *base;
-	struct event *ev_read, *ev_write;
+	struct event *ev_uread, *ev_mread, *ev_write;
 
 	base = event_base_new();
 	if (!base)
@@ -34,11 +37,11 @@ int main(int argc, char **argv) {
 	memset(&uc_addr, 0, sizeof uc_addr);
 	memset(&mc_addr, 0, sizeof mc_addr);
 	uc_addr.sin_family = AF_INET;
-	uc_addr.sin_port = htons(SEVR_PORT);
 	inet_pton(AF_INET, sevr_addr, &uc_addr.sin_addr);
+	uc_addr.sin_port = htons(SEVR_PORT);
 	mc_addr.sin_family = AF_INET;
-	mc_addr.sin_port = htons(SEVR_PORT);
 	mc_addr.sin_addr.s_addr = INADDR_ANY; // accept from any network
+	mc_addr.sin_port = htons(SEVR_PORT);
 
 	for (int i = 0; i < 2; i++) {
 		evutil_make_socket_nonblocking(sockfd[i]);
@@ -55,6 +58,12 @@ int main(int argc, char **argv) {
 		perror("bind");
 		return 1;
 	}
+	setsockopt(sockfd[1], SOL_SOCKET, SO_REUSEADDR, (const void *)&optval , sizeof(int));
+	setsockopt(sockfd[1], SOL_SOCKET, SO_REUSEPORT, (const void *)&optval , sizeof(int));
+	if (bind(sockfd[1], (SA *)&mc_addr, sizeof mc_addr) != 0) {
+		perror("bind");
+		return 1;
+	}
 	
 	mreq.imr_multiaddr.s_addr = inet_addr(MC_GROUP);
 	mreq.imr_interface.s_addr = htonl(INADDR_ANY);
@@ -64,19 +73,34 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	ev_read = event_new(base, sockfd[0], EV_READ | EV_PERSIST, do_read, &mc_addr);
-	/*ev_write = event_new(base, STDIN_FILENO, EV_READ | EV_PERSIST, do_write, &uc_addr);*/
-	ev_write = event_new(base, sockfd[1], EV_WRITE | EV_PERSIST, do_write, &uc_addr);
+	ev_uread = event_new(base, sockfd[1], EV_READ | EV_PERSIST, do_uread, NULL);
+	ev_mread = event_new(base, sockfd[0], EV_READ | EV_PERSIST, do_mread, &mc_addr);
+	ev_write = event_new(base, STDIN_FILENO, EV_READ | EV_PERSIST, do_write, &uc_addr);
+	/*ev_write = event_new(base, sockfd[1], EV_WRITE | EV_PERSIST, do_write, &uc_addr);*/
 
-	event_add(ev_read, NULL);
+	event_add(ev_uread, NULL);
+	/*event_add(ev_mread, NULL);*/
 	event_add(ev_write, NULL);
 
 	event_base_dispatch(base);
 	
 	return 0;
 }
-	
-void do_read(evutil_socket_t fd, short events, void *arg) {
+
+void do_uread(evutil_socket_t fd, short events, void *arg) {
+	int recv_bytes;
+	/*socklen_t addr_len;*/
+	char recv_buf[BUFFER_SIZE];
+	/*struct sockaddr_in ucast_addr = *((struct sockaddr_in *)arg);*/
+	/*addr_len = sizeof ucast_addr;*/
+	if ((recv_bytes = recvfrom(fd, recv_buf, sizeof recv_buf, 0, NULL, NULL)) == -1) {
+		perror("recv_bytes");
+		return;
+	}
+	printf("from server: %s", recv_buf);
+}
+
+void do_mread(evutil_socket_t fd, short events, void *arg) {
 	int recv_bytes;
 	socklen_t addr_len;
 	char recv_buf[BUFFER_SIZE];
@@ -95,12 +119,12 @@ void do_write(evutil_socket_t fd, short events, void *arg) {
 	struct sockaddr_in ucast_addr = *((struct sockaddr_in *)arg);
 	input = readline("> ");
 	
-	/*sfd = socket(AF_INET, SOCK_DGRAM, 0);*/
-	if ((send_bytes = sendto(fd, input, strlen(input) + 1, 0, (SA *)&ucast_addr, sizeof ucast_addr)) == -1) {
+	sfd = socket(AF_INET, SOCK_DGRAM, 0);
+	if ((send_bytes = sendto(sfd, input, strlen(input) + 1, 0, (SA *)&ucast_addr, sizeof ucast_addr)) == -1) {
 		perror("sendto");
 		return;
 	}
-	printf("%d\n", send_bytes);
+	printf("sent %d\n", send_bytes);
 
 	// @todo: parse input as different command
 	
