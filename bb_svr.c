@@ -34,12 +34,13 @@ int main(int argc, char** argv) {
 	
 	optval = 1;
 	setsockopt(sockfd[0], SOL_SOCKET, SO_REUSEADDR, (const void *)&optval , sizeof(int));
+	setsockopt(sockfd[0], SOL_SOCKET, SO_REUSEPORT, (const void *)&optval , sizeof(int));
 	if (bind(sockfd[0], (SA *)&sevr_addr, sizeof sevr_addr) == -1) {
 		perror("bind");
 		return 1;
 	}
 	
-	ev_readwrite = event_new(base, sockfd[0], EV_READ | EV_WRITE | EV_PERSIST, do_readwrite, &cli_addr);
+	ev_readwrite = event_new(base, sockfd[0], EV_READ | EV_PERSIST, do_readwrite, &cli_addr);
 	/*ev_mcast = event_new(base, sockfd[1], EV_WRITE | EV_PERSIST, do_mcast, NULL);*/
 
 	event_add(ev_readwrite, NULL);
