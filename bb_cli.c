@@ -8,7 +8,6 @@ void do_read(evutil_socket_t fd, short events, void *arg);
 void do_write(evutil_socket_t fd, short events, void *arg);
 // unicast sendto callback funtion
 
-
 int main(int argc, char **argv) {
 	int optval;
 	evutil_socket_t sockfd[2]; // [0] for reading, [1] for writing
@@ -39,7 +38,7 @@ int main(int argc, char **argv) {
 	inet_pton(AF_INET, sevr_addr, &uc_addr.sin_addr);
 	mc_addr.sin_family = AF_INET;
 	mc_addr.sin_port = htons(SEVR_PORT);
-	mc_addr.sin_addr.s_addr = INADDR_ANY;
+	mc_addr.sin_addr.s_addr = INADDR_ANY; // accept from any network
 
 	for (int i = 0; i < 2; i++) {
 		evutil_make_socket_nonblocking(sockfd[i]);
