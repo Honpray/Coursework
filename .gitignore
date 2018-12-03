@@ -1,4 +1,4 @@
 *.un~
 *.o
-bb_cli
-bb_svr
+cli
+svr
