@@ -10,9 +10,14 @@
 
 	`sudo apt install libreadline-dev`
 
-- [Google Client Library(Python)](https://developers.google.com/sheets/api/quickstart/python)
+~~ - [Google Client Library(Python)](https://developers.google.com/sheets/api/quickstart/python) ~~
+
+- pygsheets
+
+	`pip install pygsheets`
 
 - python-dev
+	
 	`sudo apt-get install python-dev`
 
 - JSMN
@@ -24,3 +29,4 @@
 - Construct and modify JSON object
 - Add ANSI color code
 - Add reliability check (rtt)(optional)
+- Free resource allocation(optional)
