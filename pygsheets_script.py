@@ -6,6 +6,6 @@ sh = gc.open_by_key('18oxkrFKQqETnOmNAx0y2SrPGH0LMOrvVZQsFpxPvKO8')
 
 wks = sh.sheet1
 
-a1 = wks.cell('A1')
+a1 = wks.get_value('A1')
 
 print a1
