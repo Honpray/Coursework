@@ -30,6 +30,8 @@
 #define BUFFER_SIZE 1024
 #define SEVR_PORT 9091
 #define SEVR_PORT_STR "9091"
-#define MC_GROUP "224.0.0.1"
+#define MC_ADDR "224.0.0.1"
+#define MC_PORT 6666
+#define MC_PORT_STR "6666"
 
 #define SA 	struct sockaddr
