@@ -130,7 +130,7 @@ void do_writeread(evutil_socket_t fd, short events, void *arg) {
 	printf("sent %d\n", send_bytes);
 
 	// @todo: parse input as different command
-	
+	addr_len = sizeof ucast_addr;
 	if ((recv_bytes = recvfrom(sfd, recv_buf, sizeof recv_buf, 0, (SA *)&ucast_addr, &addr_len)) == -1) {
 		perror("recv_bytes");
 		return;
