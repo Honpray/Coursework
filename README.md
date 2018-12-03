@@ -4,7 +4,16 @@
 
 - Libevent
 
-`sudo apt install libevent-dev`
+	`sudo apt install libevent-dev`
+
+- GNU readline
+
+	`sudo apt install libreadline-dev`
+
+- [Google Client Library(Python)](https://developers.google.com/sheets/api/quickstart/python)
+
+- python-dev
+	`sudo apt-get install python-dev`
 
 - JSMN
 
