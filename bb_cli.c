@@ -8,17 +8,17 @@ void do_uread(evutil_socket_t fd, short events, void *arg);
 void do_mread(evutil_socket_t fd, short events, void *arg);
 // multicast recvfrom callback function
 
-void do_write(evutil_socket_t fd, short events, void *arg);
+void do_writeread(evutil_socket_t fd, short events, void *arg);
 // unicast sendto callback funtion
 
 int main(int argc, char **argv) {
 	int optval;
-	evutil_socket_t sockfd[2]; // [0] for mread, [1] for sending, [2] for uread 
+	evutil_socket_t sockfd[2]; // [0] for mread, [1] for write and read
 	char *sevr_addr;
 	struct sockaddr_in uc_addr, mc_addr, any_addr;
 	struct ip_mreq mreq;
 	struct event_base *base;
-	struct event *ev_uread, *ev_mread, *ev_write;
+	struct event *ev_uread, *ev_mread, *ev_writeread;
 
 	base = event_base_new();
 	if (!base)
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
 	uc_addr.sin_port = htons(SEVR_PORT);
 	mc_addr.sin_family = AF_INET;
 	mc_addr.sin_addr.s_addr = INADDR_ANY; // accept from any network
-	mc_addr.sin_port = htons(SEVR_PORT);
+	mc_addr.sin_port = htons(MC_PORT);
 
 	for (int i = 0; i < 2; i++) {
 		evutil_make_socket_nonblocking(sockfd[i]);
@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	
-	mreq.imr_multiaddr.s_addr = inet_addr(MC_GROUP);
+	mreq.imr_multiaddr.s_addr = inet_addr(MC_ADDR);
 	mreq.imr_interface.s_addr = htonl(INADDR_ANY);
 
 	if (setsockopt(sockfd[0], IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof mreq) < 0) {
@@ -75,12 +75,12 @@ int main(int argc, char **argv) {
 
 	ev_uread = event_new(base, sockfd[1], EV_READ | EV_PERSIST, do_uread, NULL);
 	ev_mread = event_new(base, sockfd[0], EV_READ | EV_PERSIST, do_mread, &mc_addr);
-	ev_write = event_new(base, STDIN_FILENO, EV_READ | EV_PERSIST, do_write, &uc_addr);
-	/*ev_write = event_new(base, sockfd[1], EV_WRITE | EV_PERSIST, do_write, &uc_addr);*/
+	ev_writeread = event_new(base, STDIN_FILENO, EV_READ | EV_PERSIST, do_writeread, &uc_addr);
+	/*ev_writeread = event_new(base, sockfd[1], EV_WRITE | EV_PERSIST, do_writeread, &uc_addr);*/
 
-	event_add(ev_uread, NULL);
-	/*event_add(ev_mread, NULL);*/
-	event_add(ev_write, NULL);
+	/*event_add(ev_uread, NULL);*/
+	event_add(ev_mread, NULL);
+	event_add(ev_writeread, NULL);
 
 	event_base_dispatch(base);
 	
@@ -114,21 +114,14 @@ void do_mread(evutil_socket_t fd, short events, void *arg) {
 	}
 }
 
-void do_write(evutil_socket_t fd, short events, void *arg) {
-	int sfd, optval, send_bytes, recv_bytes;
+void do_writeread(evutil_socket_t fd, short events, void *arg) {
+	int sfd, send_bytes, recv_bytes;
 	socklen_t addr_len;
 	char *input, recv_buf[BUFFER_SIZE];
 	struct sockaddr_in ucast_addr = *((struct sockaddr_in *)arg);
 	input = readline("> ");
 	
 	sfd = socket(AF_INET, SOCK_DGRAM, 0);
-	/*optval = 1;*/
-	/*setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval , sizeof(int));*/
-	/*setsockopt(sfd, SOL_SOCKET, SO_REUSEPORT, (const void *)&optval , sizeof(int));*/
-	/*if (bind(sfd, (SA *)&ucast_addr, sizeof ucast_addr) != 0) {*/
-		/*perror("bind");*/
-		/*return 1;*/
- /* }*/
 
 	if ((send_bytes = sendto(sfd, input, strlen(input) + 1, 0, (SA *)&ucast_addr, sizeof ucast_addr)) == -1) {
 		perror("sendto");
@@ -143,4 +136,5 @@ void do_write(evutil_socket_t fd, short events, void *arg) {
 		return;
 	}
 	printf("recved %d bytes: %s from server\n", recv_bytes, recv_buf);
+	close(sfd);
 }
