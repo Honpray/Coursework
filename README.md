@@ -10,7 +10,7 @@
 
 	`sudo apt install libreadline-dev`
 
-~~ - [Google Client Library(Python)](https://developers.google.com/sheets/api/quickstart/python) ~~
+~~[Google Client Library(Python)](https://developers.google.com/sheets/api/quickstart/python)~~
 
 - pygsheets
 
