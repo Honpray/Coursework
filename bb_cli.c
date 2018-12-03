@@ -2,6 +2,8 @@
 
 /*#define CLI_DEBUG*/
 
+static struct event *ev_uread, *ev_mread, *ev_writeread;
+
 void do_uread(evutil_socket_t fd, short events, void *arg);
 //unicast recvfrom callback function
 
@@ -18,14 +20,16 @@ int main(int argc, char **argv) {
 	struct sockaddr_in uc_addr, mc_addr, any_addr;
 	struct ip_mreq mreq;
 	struct event_base *base;
-	struct event *ev_uread, *ev_mread, *ev_writeread;
-	struct timeval tv;
+	struct timeval tv1, tv2;
 	base = event_base_new();
 	if (!base)
     	return 1;
 	
-	tv.tv_sec = 1;
-	tv.tv_usec = 0;
+	tv1.tv_sec = 1;
+	tv1.tv_usec = 0;
+	tv2.tv_sec = 1;
+	tv2.tv_usec = 0;
+
 #ifdef CLI_DEBUG
 	sevr_addr = "127.0.0.1";
 #else
@@ -82,7 +86,7 @@ int main(int argc, char **argv) {
 
 	/*event_add(ev_uread, NULL);*/
 	event_add(ev_mread, NULL);
-	event_add(ev_writeread, &tv);
+	event_add(ev_writeread, &tv1);
 
 	event_base_dispatch(base);
 	
@@ -114,6 +118,8 @@ void do_mread(evutil_socket_t fd, short events, void *arg) {
 		perror("recv_bytes");
 		return;
 	}
+	printf("ms rcved~~~ %s\n", recv_buf);
+	event_del(ev_mread);
 }
 
 void do_writeread(evutil_socket_t fd, short events, void *arg) {
@@ -131,7 +137,6 @@ void do_writeread(evutil_socket_t fd, short events, void *arg) {
 	}
 	printf("sent %d\n", send_bytes);
 
-	// @todo: parse input as different command
 	addr_len = sizeof ucast_addr;
 	if ((recv_bytes = recvfrom(sfd, recv_buf, sizeof recv_buf, 0, (SA *)&ucast_addr, &addr_len)) == -1) {
 		perror("recv_bytes");
@@ -139,4 +144,10 @@ void do_writeread(evutil_socket_t fd, short events, void *arg) {
 	}
 	printf("recved %d bytes: %s from server\n", recv_bytes, recv_buf);
 	close(sfd);
+	
+	// @todo: parse input as different command
+	char *cmd = strtok(input, " ");
+	if (!strcmp(cmd, "post")) {
+		event_active(ev_mread, EV_READ, 0);
+	}
 }

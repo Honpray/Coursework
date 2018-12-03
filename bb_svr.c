@@ -109,6 +109,7 @@ void do_mcast(evutil_socket_t fd, short events, void *arg) {
 		perror("sendto");
 		return;
 	}
-	printf("mcast %d sent\n", send_bytes);
+	/*printf("mcast %d sent\n", send_bytes);*/
+	puts("mcast msg sent!");
 	event_del(ev_mcast);
 }
