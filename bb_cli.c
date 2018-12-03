@@ -19,11 +19,13 @@ int main(int argc, char **argv) {
 	struct ip_mreq mreq;
 	struct event_base *base;
 	struct event *ev_uread, *ev_mread, *ev_writeread;
-
+	struct timeval tv;
 	base = event_base_new();
 	if (!base)
     	return 1;
 	
+	tv.tv_sec = 1;
+	tv.tv_usec = 0;
 #ifdef CLI_DEBUG
 	sevr_addr = "127.0.0.1";
 #else
@@ -80,7 +82,7 @@ int main(int argc, char **argv) {
 
 	/*event_add(ev_uread, NULL);*/
 	event_add(ev_mread, NULL);
-	event_add(ev_writeread, NULL);
+	event_add(ev_writeread, &tv);
 
 	event_base_dispatch(base);
 	

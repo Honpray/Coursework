@@ -1,6 +1,7 @@
 #include "bb.h"
 
 static struct event *ev_readwrite, *ev_mcast;
+static struct timeval tv;
 
 void do_readwrite(evutil_socket_t fd, short events, void *arg);
 // unicast recvfrom and sendto callback function
@@ -20,6 +21,9 @@ int main(int argc, char** argv) {
 	if (!base)
     	return 1;
 	
+	tv.tv_sec = 1;
+	tv.tv_usec = 0;
+
 	memset(&sevr_addr, 0, sizeof sevr_addr);
 	memset(&cli_addr, 0, sizeof cli_addr);
 	sevr_addr.sin_family = AF_INET;
@@ -47,9 +51,11 @@ int main(int argc, char** argv) {
 	
 	ev_readwrite = event_new(base, sockfd[0], EV_READ | EV_PERSIST, do_readwrite, &cli_addr);
 	ev_mcast = event_new(base, sockfd[1], EV_READ, do_mcast, &mc_addr);
+	
+
 
 	event_add(ev_readwrite, NULL);
-	/*event_add(ev_mcast, NULL);*/
+	event_add(ev_mcast, &tv);
 
 	event_base_dispatch(base);
 	
@@ -80,19 +86,17 @@ void do_readwrite(evutil_socket_t fd, short events, void *arg) {
 	char *cmd = strtok(recv_buf, " ");
 	
 	// *** post ***
+
+	
+	// fork here
+	/*sleep(1);*/
+	if ((send_bytes = sendto(fd, send_buf, strlen(send_buf) + 1, 0, (SA *)&ucast_addr, sizeof ucast_addr)) == -1) {
+		perror("sendto");
+		return;
+	}
+	printf("server sent %d \n", send_bytes);
 	if (!strcmp(cmd, "post")) {
 		event_active(ev_mcast, EV_READ, 0);
-	}
-	else {
-		
-		// fork here
-		sleep(1);
-		if ((send_bytes = sendto(fd, send_buf, strlen(send_buf) + 1, 0, (SA *)&ucast_addr, sizeof ucast_addr)) == -1) {
-			perror("sendto");
-			return;
-		}
-		printf("server sent %d \n", send_bytes);
-
 	}
 	
 }
@@ -101,9 +105,10 @@ void do_mcast(evutil_socket_t fd, short events, void *arg) {
 	int send_bytes;
 	char *send_buf = "mcast msg!";
 	struct sockaddr_in mcast_addr = *((struct sockaddr_in *)arg);
-	if ((sendto(fd, send_buf, strlen(send_buf) + 1, 0, (SA *)&mcast_addr, sizeof mcast_addr)) == -1) {
+	if (send_bytes = (sendto(fd, send_buf, strlen(send_buf) + 1, 0, (SA *)&mcast_addr, sizeof mcast_addr)) == -1) {
 		perror("sendto");
 		return;
 	}
-	printf("mcast sent\n");
+	printf("mcast %d sent\n", send_bytes);
+	event_del(ev_mcast);
 }
