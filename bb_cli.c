@@ -1,6 +1,6 @@
 #include "bb.h"
 
-#define CLI_DEBUG
+/*#define CLI_DEBUG*/
 
 void do_uread(evutil_socket_t fd, short events, void *arg);
 //unicast recvfrom callback function
@@ -88,6 +88,7 @@ int main(int argc, char **argv) {
 }
 
 void do_uread(evutil_socket_t fd, short events, void *arg) {
+	puts("!");
 	int recv_bytes;
 	/*socklen_t addr_len;*/
 	char recv_buf[BUFFER_SIZE];
@@ -97,6 +98,7 @@ void do_uread(evutil_socket_t fd, short events, void *arg) {
 		perror("recv_bytes");
 		return;
 	}
+	recv_buf[recv_bytes] = 0;
 	printf("from server: %s", recv_buf);
 }
 
@@ -113,13 +115,21 @@ void do_mread(evutil_socket_t fd, short events, void *arg) {
 }
 
 void do_write(evutil_socket_t fd, short events, void *arg) {
-	int sfd, send_bytes, recv_bytes;
+	int sfd, optval, send_bytes, recv_bytes;
 	socklen_t addr_len;
 	char *input, recv_buf[BUFFER_SIZE];
 	struct sockaddr_in ucast_addr = *((struct sockaddr_in *)arg);
 	input = readline("> ");
 	
 	sfd = socket(AF_INET, SOCK_DGRAM, 0);
+	/*optval = 1;*/
+	/*setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval , sizeof(int));*/
+	/*setsockopt(sfd, SOL_SOCKET, SO_REUSEPORT, (const void *)&optval , sizeof(int));*/
+	/*if (bind(sfd, (SA *)&ucast_addr, sizeof ucast_addr) != 0) {*/
+		/*perror("bind");*/
+		/*return 1;*/
+ /* }*/
+
 	if ((send_bytes = sendto(sfd, input, strlen(input) + 1, 0, (SA *)&ucast_addr, sizeof ucast_addr)) == -1) {
 		perror("sendto");
 		return;
@@ -128,9 +138,9 @@ void do_write(evutil_socket_t fd, short events, void *arg) {
 
 	// @todo: parse input as different command
 	
-	/*if ((recv_bytes = recvfrom(fd, recv_buf, sizeof recv_buf, 0, (SA *)&ucast_addr, &addr_len)) == -1) {*/
-		/*perror("recv_bytes");*/
-		/*return;*/
-	/*}*/
-	/*printf("recved %d bytes: %s from server\n", recv_bytes, recv_buf);*/
+	if ((recv_bytes = recvfrom(sfd, recv_buf, sizeof recv_buf, 0, (SA *)&ucast_addr, &addr_len)) == -1) {
+		perror("recv_bytes");
+		return;
+	}
+	printf("recved %d bytes: %s from server\n", recv_bytes, recv_buf);
 }

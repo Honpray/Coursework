@@ -61,20 +61,21 @@ void do_readwrite(evutil_socket_t fd, short events, void *arg) {
 		perror("recv_bytes");
 		return;
 	}
-	printf("recved %d bytes: %s ", recv_bytes, recv_buf);
+	recv_buf[recv_bytes] = 0;
+	printf("recved %d bytes: %s \n", recv_bytes, recv_buf);
 	
 	char str[INET_ADDRSTRLEN];
 	int clientPort = ntohs(ucast_addr.sin_port);
 	inet_ntop(AF_INET, &ucast_addr.sin_addr, str, INET_ADDRSTRLEN);
-	printf("%s:%d", str, clientPort);
+	printf("%s:%d \n", str, clientPort);
 	// @todo: command parsing and reply here
-	/*while(1) {*/
-		/*sleep(2);*/
+	// fork here
+	sleep(2);
 	if ((send_bytes = sendto(fd, send_buf, strlen(send_buf) + 1, 0, (SA *)&ucast_addr, sizeof ucast_addr)) == -1) {
 		perror("sendto");
 		return;
-	/*}*/
-	printf("server sent %d \n", send_bytes);}
+	}
+	printf("server sent %d \n", send_bytes);
 }
 
 /*void do_mcast(evutil_socket_t fd, short events, void *arg);*/
