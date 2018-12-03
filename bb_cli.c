@@ -128,7 +128,9 @@ void do_writeread(evutil_socket_t fd, short events, void *arg) {
 	char *input, recv_buf[BUFFER_SIZE];
 	struct sockaddr_in ucast_addr = *((struct sockaddr_in *)arg);
 	input = readline("> ");
-	
+	while (input == "\n") {
+		input = readline("> ");
+	}
 	sfd = socket(AF_INET, SOCK_DGRAM, 0);
 
 	if ((send_bytes = sendto(sfd, input, strlen(input) + 1, 0, (SA *)&ucast_addr, sizeof ucast_addr)) == -1) {
@@ -147,7 +149,7 @@ void do_writeread(evutil_socket_t fd, short events, void *arg) {
 	
 	// @todo: parse input as different command
 	char *cmd = strtok(input, " ");
-	if (!strcmp(cmd, "post")) {
+	if (cmd != NULL && !strcmp(cmd, "post")) {
 		event_active(ev_mread, EV_READ, 0);
 	}
 }

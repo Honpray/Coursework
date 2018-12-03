@@ -95,7 +95,7 @@ void do_readwrite(evutil_socket_t fd, short events, void *arg) {
 		return;
 	}
 	printf("server sent %d \n", send_bytes);
-	if (!strcmp(cmd, "post")) {
+	if (cmd != NULL && !strcmp(cmd, "post")) {
 		event_active(ev_mcast, EV_READ, 0);
 	}
 	
