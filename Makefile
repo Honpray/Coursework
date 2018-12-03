@@ -1,5 +1,5 @@
 all:
-#	gcc -o test test.c $(shell /usr/bin/python3.5-config --cflags) $(shell /usr/bin/python3.5-config --ldflags) 
+#	gcc -o test test.c $(shell /usr/bin/python2.7-config --cflags) $(shell /usr/bin/python2.7-config --ldflags) 
 cli:
 	gcc -g -o cli bb_cli.c -Wall -lreadline -levent
 svr:
