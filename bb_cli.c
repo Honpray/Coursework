@@ -4,7 +4,11 @@
 
 static struct event *ev_uread, *ev_mread, *ev_writeread;
 
-void do_uread(evutil_socket_t fd, short events, void *arg);
+char* get_password(void);
+
+void send_login_info(evutil_socket_t fd, char *uname, char *pwd, void *arg);
+
+/*void do_uread(evutil_socket_t fd, short events, void *arg);*/
 //unicast recvfrom callback function
 
 void do_mread(evutil_socket_t fd, short events, void *arg);
@@ -16,11 +20,12 @@ void do_writeread(evutil_socket_t fd, short events, void *arg);
 int main(int argc, char **argv) {
 	int optval;
 	evutil_socket_t sockfd[2]; // [0] for mread, [1] for write and read
-	char *sevr_addr;
-	struct sockaddr_in uc_addr, mc_addr, any_addr;
+	char *sevr_addr, *username, *password, *pwd_hash;
+	struct sockaddr_in uc_addr, mc_addr;
 	struct ip_mreq mreq;
 	struct event_base *base;
 	struct timeval tv1, tv2;
+
 	base = event_base_new();
 	if (!base)
     	return 1;
@@ -40,6 +45,10 @@ int main(int argc, char **argv) {
 	sevr_addr = argv[1];
 #endif
 	
+	username = readline("username: ");
+	password = readline("password: ");
+	/*printf("\n%s %s\n", username, password);*/
+
 	memset(&uc_addr, 0, sizeof uc_addr);
 	memset(&mc_addr, 0, sizeof mc_addr);
 	uc_addr.sin_family = AF_INET;
@@ -64,12 +73,12 @@ int main(int argc, char **argv) {
 		perror("bind");
 		return 1;
 	}
-	setsockopt(sockfd[1], SOL_SOCKET, SO_REUSEADDR, (const void *)&optval , sizeof(int));
-	setsockopt(sockfd[1], SOL_SOCKET, SO_REUSEPORT, (const void *)&optval , sizeof(int));
-	if (bind(sockfd[1], (SA *)&mc_addr, sizeof mc_addr) != 0) {
-		perror("bind");
-		return 1;
-	}
+	/*setsockopt(sockfd[1], SOL_SOCKET, SO_REUSEADDR, (const void *)&optval , sizeof(int));*/
+	/*setsockopt(sockfd[1], SOL_SOCKET, SO_REUSEPORT, (const void *)&optval , sizeof(int));*/
+	/*if (bind(sockfd[1], (SA *)&mc_addr, sizeof mc_addr) != 0) {*/
+		/*perror("bind");*/
+		/*return 1;*/
+	/*}*/
 	
 	mreq.imr_multiaddr.s_addr = inet_addr(MC_ADDR);
 	mreq.imr_interface.s_addr = htonl(INADDR_ANY);
@@ -78,8 +87,10 @@ int main(int argc, char **argv) {
 		perror("setsockopt");
 		return 1;
 	}
+	
+	send_login_info(sockfd[1], username, password, &uc_addr);
 
-	ev_uread = event_new(base, sockfd[1], EV_READ | EV_PERSIST, do_uread, NULL);
+	/*ev_uread = event_new(base, sockfd[1], EV_READ | EV_PERSIST, do_uread, NULL);*/
 	ev_mread = event_new(base, sockfd[0], EV_READ | EV_PERSIST, do_mread, &mc_addr);
 	ev_writeread = event_new(base, STDIN_FILENO, EV_READ | EV_PERSIST, do_writeread, &uc_addr);
 	/*ev_writeread = event_new(base, sockfd[1], EV_WRITE | EV_PERSIST, do_writeread, &uc_addr);*/
@@ -93,20 +104,43 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-void do_uread(evutil_socket_t fd, short events, void *arg) {
-	puts("!");
-	int recv_bytes;
-	/*socklen_t addr_len;*/
-	char recv_buf[BUFFER_SIZE];
-	/*struct sockaddr_in ucast_addr = *((struct sockaddr_in *)arg);*/
-	/*addr_len = sizeof ucast_addr;*/
-	if ((recv_bytes = recvfrom(fd, recv_buf, sizeof recv_buf, 0, NULL, NULL)) == -1) {
-		perror("recv_bytes");
+void send_login_info(evutil_socket_t fd, char *uname, char *pwd, void *arg) {
+	int send_bytes;
+	char u_send[50], p_send[50];
+	struct sockaddr_in ucast_addr = *((struct sockaddr_in *)arg);
+	
+	sprintf(u_send, "username %s", uname);
+	puts(u_send);
+	sprintf(p_send, "password %s", pwd);
+	if ((send_bytes = sendto(fd, u_send, strlen(u_send) + 1, 0, (SA *)&ucast_addr, sizeof ucast_addr)) == -1) {
+		perror("sendto");
 		return;
 	}
-	recv_buf[recv_bytes] = 0;
-	printf("from server: %s", recv_buf);
+	printf("sent username %d\n", send_bytes);
+	if ((send_bytes = sendto(fd, p_send, strlen(p_send) + 1, 0, (SA *)&ucast_addr, sizeof ucast_addr)) == -1) {
+		perror("sendto");
+		return;
+	}
+	printf("sent password %d\n", send_bytes);
+
+
+
 }
+
+
+/*void do_uread(evutil_socket_t fd, short events, void *arg) {*/
+	/*int recv_bytes;*/
+	/*[>socklen_t addr_len;<]*/
+	/*char recv_buf[BUFFER_SIZE];*/
+	/*[>struct sockaddr_in ucast_addr = *((struct sockaddr_in *)arg);<]*/
+	/*[>addr_len = sizeof ucast_addr;<]*/
+	/*if ((recv_bytes = recvfrom(fd, recv_buf, sizeof recv_buf, 0, NULL, NULL)) == -1) {*/
+		/*perror("recv_bytes");*/
+		/*return;*/
+	/*}*/
+	/*recv_buf[recv_bytes] = 0;*/
+	/*printf("from server: %s", recv_buf);*/
+/*}*/
 
 void do_mread(evutil_socket_t fd, short events, void *arg) {
 	int recv_bytes;
@@ -128,9 +162,9 @@ void do_writeread(evutil_socket_t fd, short events, void *arg) {
 	char *input, recv_buf[BUFFER_SIZE];
 	struct sockaddr_in ucast_addr = *((struct sockaddr_in *)arg);
 	input = readline("> ");
-	while (input == "\n") {
-		input = readline("> ");
-	}
+	/*while (input == "\n") {*/
+		/*input = readline("> ");*/
+	/*}*/
 	sfd = socket(AF_INET, SOCK_DGRAM, 0);
 
 	if ((send_bytes = sendto(sfd, input, strlen(input) + 1, 0, (SA *)&ucast_addr, sizeof ucast_addr)) == -1) {

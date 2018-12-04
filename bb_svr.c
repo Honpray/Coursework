@@ -89,7 +89,7 @@ void do_readwrite(evutil_socket_t fd, short events, void *arg) {
 
 	
 	// fork here
-	/*sleep(1);*/
+	sleep(4);
 	if ((send_bytes = sendto(fd, send_buf, strlen(send_buf) + 1, 0, (SA *)&ucast_addr, sizeof ucast_addr)) == -1) {
 		perror("sendto");
 		return;

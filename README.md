@@ -18,7 +18,11 @@
 
 - python-dev
 	
-	`sudo apt-get install python-dev`
+	`sudo apt install python-dev`
+
+- libssl-dev
+	
+	`sudo apt install libssl-dev`
 
 - JSMN
 
