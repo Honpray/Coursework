@@ -4,3 +4,5 @@ cli
 svr
 *.json
 testcpython
+test
+test.c

@@ -1,10 +1,11 @@
 #include "bb.h"
+#include <openssl/md5.h>
 
 /*#define CLI_DEBUG*/
 
 static struct event *ev_uread, *ev_mread, *ev_writeread;
 
-char* get_password(void);
+char *get_md5_hash(char *pwd);
 
 void send_login_info(evutil_socket_t fd, char *uname, char *pwd, void *arg);
 
@@ -48,6 +49,9 @@ int main(int argc, char **argv) {
 	username = readline("username: ");
 	password = readline("password: ");
 	/*printf("\n%s %s\n", username, password);*/
+	
+	pwd_hash = get_md5_hash(password);
+	/*printf("hashed %s\n", pwd_hash);*/
 
 	memset(&uc_addr, 0, sizeof uc_addr);
 	memset(&mc_addr, 0, sizeof mc_addr);
@@ -104,6 +108,22 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
+
+char *get_md5_hash(char *pwd) {
+	char *md5_string = malloc(33 *sizeof(char));
+	unsigned char digest[16];
+	MD5_CTX context;
+	MD5_Init(&context);
+	MD5_Update(&context, pwd, strlen(pwd));
+	MD5_Final(digest, &context);
+
+	for (int i = 0; i < 16; ++i) {
+		sprintf(&md5_string[i*2], "%02x", (unsigned int)digest[i]);
+	}
+	printf("%s\n", md5_string);
+	return md5_string;
+}
+
 void send_login_info(evutil_socket_t fd, char *uname, char *pwd, void *arg) {
 	int send_bytes;
 	char u_send[50], p_send[50];
@@ -116,17 +136,13 @@ void send_login_info(evutil_socket_t fd, char *uname, char *pwd, void *arg) {
 		perror("sendto");
 		return;
 	}
-	printf("sent username %d\n", send_bytes);
+	/*printf("sent username %d\n", send_bytes);*/
 	if ((send_bytes = sendto(fd, p_send, strlen(p_send) + 1, 0, (SA *)&ucast_addr, sizeof ucast_addr)) == -1) {
 		perror("sendto");
 		return;
 	}
-	printf("sent password %d\n", send_bytes);
-
-
-
+	/*printf("sent password %d\n", send_bytes);*/
 }
-
 
 /*void do_uread(evutil_socket_t fd, short events, void *arg) {*/
 	/*int recv_bytes;*/
@@ -152,7 +168,7 @@ void do_mread(evutil_socket_t fd, short events, void *arg) {
 		perror("recv_bytes");
 		return;
 	}
-	printf("ms rcved~~~ %s\n", recv_buf);
+	printf("%sms rcved~~~ %s%s\n",COLOR_GREEN, recv_buf, COLOR_NORMAL);
 	event_del(ev_mread);
 }
 
@@ -178,7 +194,7 @@ void do_writeread(evutil_socket_t fd, short events, void *arg) {
 		perror("recv_bytes");
 		return;
 	}
-	printf("recved %d bytes: %s from server\n", recv_bytes, recv_buf);
+	printf("recved %d bytes: %s%s%s\n", recv_bytes, COLOR_MAGENTA, recv_buf, COLOR_NORMAL);
 	close(sfd);
 	
 	// @todo: parse input as different command
