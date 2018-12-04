@@ -1,8 +1,6 @@
 #include "bb.h"
 #include <openssl/md5.h>
 
-
-
 /*#define CLI_DEBUG*/
 
 static struct event *ev_uread, *ev_mread, *ev_writeread;
@@ -94,7 +92,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	
-	send_login_info(sockfd[1], username, password, &uc_addr);
+	send_login_info(sockfd[1], username, pwd_hash, &uc_addr);
 
 	/*ev_uread = event_new(base, sockfd[1], EV_READ | EV_PERSIST, do_uread, NULL);*/
 	ev_mread = event_new(base, sockfd[0], EV_READ | EV_PERSIST, do_mread, &mc_addr);
@@ -132,7 +130,6 @@ void send_login_info(evutil_socket_t fd, char *uname, char *pwd, void *arg) {
 	struct sockaddr_in ucast_addr = *((struct sockaddr_in *)arg);
 	
 	sprintf(u_send, "username %s", uname);
-	puts(u_send);
 	sprintf(p_send, "password %s", pwd);
 	if ((send_bytes = sendto(fd, u_send, strlen(u_send) + 1, 0, (SA *)&ucast_addr, sizeof ucast_addr)) == -1) {
 		perror("sendto");

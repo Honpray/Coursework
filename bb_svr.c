@@ -18,8 +18,8 @@ int main(int argc, char** argv) {
 	struct event_base *base;
 	/*struct event *ev_readwrite, *ev_mcast;*/
 	
-	Py_Initialize();
-	printf("%s", p_get_cell("B2"));
+	/*Py_Initialize();*/
+	/*printf("%s", p_get_cell("B2"));*/
 
 	base = event_base_new();
 	if (!base)
@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
 
 	event_base_dispatch(base);
 	
-	Py_Finalize();
+	/*Py_Finalize();*/
 	return 0;
 }
 
