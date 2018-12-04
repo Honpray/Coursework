@@ -110,6 +110,6 @@ void do_mcast(evutil_socket_t fd, short events, void *arg) {
 		return;
 	}
 	/*printf("mcast %d sent\n", send_bytes);*/
-	puts("mcast msg sent!");
+	printf("%smcast msg sent!%s\n", COLOR_RED, COLOR_NORMAL);
 	event_del(ev_mcast);
 }
