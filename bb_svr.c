@@ -82,7 +82,7 @@ void do_readwrite(evutil_socket_t fd, short events, void *arg) {
 	struct sockaddr_in ucast_addr = *((struct sockaddr_in *)arg);
 	addr_len = sizeof ucast_addr;
 
-	send_buf = "Server is on!";
+	send_buf = "Server running!";
 	if ((recv_bytes = recvfrom(fd, recv_buf, sizeof recv_buf, 0, (SA *)&ucast_addr, &addr_len)) == -1) {
 		perror("recv_bytes");
 		return;
@@ -127,7 +127,9 @@ void do_readwrite(evutil_socket_t fd, short events, void *arg) {
 		mcast_arg->msg = content;
 		event_active(ev_mcast, EV_READ, 0);
 	}
-	
+	/*if (cmd != NULL && !strcmp(cmd, "list")) {*/
+		/*printf("%s\n", p_list_users());*/
+	/*}*/
 }
 
 void do_mcast(evutil_socket_t fd, short events, void *arg) {

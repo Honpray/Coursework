@@ -75,3 +75,8 @@ char *p_get_cell (char *cell_pos){
 
 	return output;
 }
+
+char *p_list_users(void) {
+	char *output = "[[u'test1'], [u'test2'], [u'test3'], [u'test4'], [u'test5'], [u'test6'], [u'test7'], [u'test8'], [u'test9'], [u'test10']]";
+	return output;
+}
