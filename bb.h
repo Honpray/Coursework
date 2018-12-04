@@ -48,3 +48,10 @@
 #define COLOR_LCYAN "\033[0;36m"
 #define COLOR_RED "\033[0;31m"
 #define COLOR_INVERSE "\033[7m"
+
+#define TEXT_BOLD "\e[1m]"
+#define TEXT_NORMAL "\e[0m]"
+#define TEXT_ITALIC "\e[3m]"
+#define TEXT_UNDERLINE "\e[4m]"
+
+
