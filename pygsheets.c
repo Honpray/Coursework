@@ -1,13 +1,10 @@
-#include <stdio.h>
-#include <Python.h>
+#include "pygsheets.h"
 
-int main(int argc, char **argv) {
-	char *key = "18oxkrFKQqETnOmNAx0y2SrPGH0LMOrvVZQsFpxPvKO8";
-	
-	PyObject *pModuleString, *pModule, *pGc, *pA1, *pCellArg, *pCellFunc, *pWks, *pSh, *pKeyArg, *pOpenkeyFunc, *pEmptyArg, *pAuthFunc;
+char *key = "18oxkrFKQqETnOmNAx0y2SrPGH0LMOrvVZQsFpxPvKO8";
 
-	Py_Initialize();
-	
+char *p_get_cell (char *cell_pos){
+	PyObject *pModuleString, *pModule, *pGc, *pCellPos, *pCellArg, *pCellFunc, *pWks, *pSh, *pKeyArg, *pOpenkeyFunc, *pEmptyArg, *pAuthFunc;
+
 	pModuleString = PyString_FromString((char *)"pygsheets");
 	if (!pModuleString) {
 		PyErr_Print();
@@ -57,7 +54,7 @@ int main(int argc, char **argv) {
 		PyErr_Print();
 		puts("Error pWks");
 	}
-	pCellArg = Py_BuildValue("(s)", "A1");
+	pCellArg = Py_BuildValue("(s)", cell_pos);
 	if (!pCellArg) {
 		PyErr_Print();
 		puts("Error pCellArg");
@@ -67,16 +64,14 @@ int main(int argc, char **argv) {
 		PyErr_Print();
 		puts("Error pCellFunc");
 	}
-	pA1 = PyEval_CallObject(pCellFunc, pCellArg);
-	if (!pA1) {
+	pCellPos = PyEval_CallObject(pCellFunc, pCellArg);
+	if (!pCellPos) {
 		PyErr_Print();
-		puts("Error pA1");
+		puts("Error pCellPos");
 	}
 	
 	char *output;
-	PyArg_Parse(pA1, "s", &output);
+	PyArg_Parse(pCellPos, "s", &output);
 
-	puts(output);
-	Py_Finalize();
-	return 0;
+	return output;
 }
