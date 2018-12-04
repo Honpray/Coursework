@@ -3,6 +3,7 @@
 char *key = "18oxkrFKQqETnOmNAx0y2SrPGH0LMOrvVZQsFpxPvKO8";
 
 char *p_get_cell (char *cell_pos){
+	char *output;
 	PyObject *pModuleString, *pModule, *pGc, *pCellPos, *pCellArg, *pCellFunc, *pWks, *pSh, *pKeyArg, *pOpenkeyFunc, *pEmptyArg, *pAuthFunc;
 
 	pModuleString = PyString_FromString((char *)"pygsheets");
@@ -70,7 +71,6 @@ char *p_get_cell (char *cell_pos){
 		puts("Error pCellPos");
 	}
 	
-	char *output;
 	PyArg_Parse(pCellPos, "s", &output);
 
 	return output;

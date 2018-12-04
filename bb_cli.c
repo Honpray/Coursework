@@ -33,8 +33,8 @@ int main(int argc, char **argv) {
 	
 	tv1.tv_sec = 1;
 	tv1.tv_usec = 0;
-	tv2.tv_sec = 1;
-	tv2.tv_usec = 0;
+	/*tv2.tv_sec = 1;*/
+	/*tv2.tv_usec = 0;*/
 
 #ifdef CLI_DEBUG
 	sevr_addr = "127.0.0.1";
@@ -46,8 +46,8 @@ int main(int argc, char **argv) {
 	sevr_addr = argv[1];
 #endif
 	
-	username = readline("username: ");
-	password = readline("password: ");
+	username = readline("\e[1musername:\e[0m ");
+	password = readline("\e[1mpassword:\e[0m ");
 	/*printf("\n%s %s\n", username, password);*/
 	
 	pwd_hash = get_md5_hash(password);
@@ -167,7 +167,7 @@ void do_mread(evutil_socket_t fd, short events, void *arg) {
 		perror("recv_bytes");
 		return;
 	}
-	printf("%sms rcved~~~ %s%s\n",COLOR_GREEN, recv_buf, COLOR_NORMAL);
+	printf("%sNotification!%s %s%s%s\n",COLOR_RED, COLOR_NORMAL, COLOR_GREEN, recv_buf, COLOR_NORMAL);
 	event_del(ev_mread);
 }
 
@@ -186,14 +186,14 @@ void do_writeread(evutil_socket_t fd, short events, void *arg) {
 		perror("sendto");
 		return;
 	}
-	printf("sent %d\n", send_bytes);
+	/*printf("sent %d\n", send_bytes);*/
 
 	addr_len = sizeof ucast_addr;
 	if ((recv_bytes = recvfrom(sfd, recv_buf, sizeof recv_buf, 0, (SA *)&ucast_addr, &addr_len)) == -1) {
 		perror("recv_bytes");
 		return;
 	}
-	printf("recved %d bytes: %s%s%s\n", recv_bytes, COLOR_MAGENTA, recv_buf, COLOR_NORMAL);
+	printf("%s%s%s\n", COLOR_MAGENTA, recv_buf, COLOR_NORMAL);
 	close(sfd);
 	
 	// @todo: parse input as different command
